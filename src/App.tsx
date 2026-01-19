@@ -20,6 +20,7 @@
 
 import './index.css';
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 
 // Import custom hooks
 import { useSimulation } from './hooks/useSimulation';
@@ -108,9 +109,17 @@ function App() {
                 Interactive Digital Communications Educational Tool
               </p>
             </div>
-            <div className="text-right text-xs text-slate-500">
-              <div>EE597 - Wireless Networks</div>
-              <div>University of Southern California</div>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/quiz"
+                className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-medium transition-colors"
+              >
+                Take Quiz
+              </Link>
+              <div className="text-right text-xs text-slate-500">
+                <div>EE597 - Wireless Networks</div>
+                <div>University of Southern California</div>
+              </div>
             </div>
           </div>
         </header>
