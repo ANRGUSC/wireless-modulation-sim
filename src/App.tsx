@@ -188,7 +188,7 @@ function App() {
             currentSnrDb={state.snrDb}
             simulatedBER={state.bitCount > 0 ? currentBER : null}
             bitCount={state.bitCount}
-            snrMin={0}
+            snrMin={-5}
             snrMax={maxSnr}
           />
         </div>
