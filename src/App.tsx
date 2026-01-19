@@ -106,7 +106,7 @@ function App() {
                 Wireless Modulation Simulator
               </h1>
               <p className="text-sm text-slate-400">
-                Interactive Digital Communications Educational Tool
+                This simulator allows you to explore the bit error rate performance of major digital modulation schemes under additive white Gaussian noise (AWGN).
               </p>
             </div>
             <div className="flex items-center gap-4">
