@@ -24,7 +24,7 @@
  * @author Bhaskar Krishnamachari (USC), developed with Claude Code
  */
 
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import type { ConstellationPoint, ReceivedSymbol, ModulationScheme } from '../types';
 
 // =============================================================================
@@ -81,18 +81,43 @@ const COLORS = {
  * Renders an interactive constellation diagram using HTML Canvas.
  * Shows ideal constellation points and received (noisy) symbols.
  */
+// Zoom levels (higher = more zoomed in)
+const ZOOM_LEVELS = [1, 1.5, 2, 3];
+
 export const ConstellationDiagram: React.FC<ConstellationDiagramProps> = ({
   constellation,
   receivedSymbols,
   scheme,
   width = 400,
   height = 400,
-  axisRange = 2,
+  axisRange: baseAxisRange = 2,
   showLabels = true,
   showUnitCircle = true,
   showGrid = true,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Zoom state - default to 2x for 64-QAM, 1x for others
+  const [zoomIndex, setZoomIndex] = useState(() => scheme === '64-QAM' ? 2 : 0);
+
+  // Reset zoom when scheme changes (and set appropriate default)
+  useEffect(() => {
+    setZoomIndex(scheme === '64-QAM' ? 2 : 0);
+  }, [scheme]);
+
+  const zoomLevel = ZOOM_LEVELS[zoomIndex];
+  const axisRange = baseAxisRange / zoomLevel;
+
+  const canZoomIn = zoomIndex < ZOOM_LEVELS.length - 1;
+  const canZoomOut = zoomIndex > 0;
+
+  const handleZoomIn = () => {
+    if (canZoomIn) setZoomIndex(z => z + 1);
+  };
+
+  const handleZoomOut = () => {
+    if (canZoomOut) setZoomIndex(z => z - 1);
+  };
 
   /**
    * Determine if this is a PSK scheme (points on unit circle).
@@ -163,8 +188,40 @@ export const ConstellationDiagram: React.FC<ConstellationDiagramProps> = ({
         <div className="text-sm text-slate-400 font-medium">
           CONSTELLATION DIAGRAM
         </div>
-        <div className="text-xs text-slate-500">
-          {receivedSymbols.length} received symbols
+        <div className="flex items-center gap-3">
+          {/* Zoom controls */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleZoomOut}
+              disabled={!canZoomOut}
+              className={`w-6 h-6 rounded text-sm font-bold transition-colors ${
+                canZoomOut
+                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                  : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+              }`}
+              title="Zoom out"
+            >
+              −
+            </button>
+            <span className="text-xs text-slate-400 w-10 text-center">
+              {zoomLevel}×
+            </span>
+            <button
+              onClick={handleZoomIn}
+              disabled={!canZoomIn}
+              className={`w-6 h-6 rounded text-sm font-bold transition-colors ${
+                canZoomIn
+                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                  : 'bg-slate-800 text-slate-600 cursor-not-allowed'
+              }`}
+              title="Zoom in"
+            >
+              +
+            </button>
+          </div>
+          <div className="text-xs text-slate-500">
+            {receivedSymbols.length} symbols
+          </div>
         </div>
       </div>
 
