@@ -191,16 +191,22 @@ export const BERPlot: React.FC<BERPlotProps> = ({
   const sampleBER = allCurvesData[scheme].find(p => Math.abs(p.snrDb - 10) < 0.5)?.ber;
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+    <div
+      className="rounded-lg p-4 border transition-colors"
+      style={{
+        backgroundColor: 'var(--bg-secondary)',
+        borderColor: 'var(--bg-border)'
+      }}
+    >
       {/* Header */}
       <div className="flex justify-between items-center mb-3">
-        <div className="text-sm text-slate-400 font-medium">
+        <div className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
           BER PERFORMANCE
         </div>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
           <span className="text-cyan-400 font-medium">{scheme}</span> over AWGN
           {sampleBER && (
-            <span className="ml-2 text-slate-600">
+            <span className="ml-2" style={{ color: 'var(--text-muted)' }}>
               (BER@10dB: {sampleBER.toExponential(1)})
             </span>
           )}
@@ -213,7 +219,7 @@ export const BERPlot: React.FC<BERPlotProps> = ({
           <ComposedChart
             key={scheme}
             data={chartData}
-            margin={{ top: 10, right: 30, left: 10, bottom: 20 }}
+            margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} />
 
@@ -320,25 +326,25 @@ export const BERPlot: React.FC<BERPlotProps> = ({
             className="w-4 h-0.5 rounded"
             style={{ backgroundColor: SCHEME_COLORS[scheme] }}
           />
-          <span className="text-slate-400">{scheme} (selected)</span>
+          <span style={{ color: 'var(--text-muted)' }}>{scheme} (selected)</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-0.5 bg-slate-500 rounded opacity-40" />
-          <span className="text-slate-400">Other schemes</span>
+          <span style={{ color: 'var(--text-muted)' }}>Other schemes</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-          <span className="text-slate-400">Simulated BER</span>
+          <span style={{ color: 'var(--text-muted)' }}>Simulated BER</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-0.5 border-t-2 border-dashed border-red-500" />
-          <span className="text-slate-400">Current SNR</span>
+          <span style={{ color: 'var(--text-muted)' }}>Current SNR</span>
         </div>
       </div>
 
       {/* Educational note */}
-      <div className="mt-3 pt-3 border-t border-slate-700 text-xs text-slate-500">
-        <strong className="text-slate-400">Note:</strong> This semi-log plot shows
+      <div className="mt-3 pt-3 border-t text-xs" style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}>
+        <strong style={{ color: 'var(--text-secondary)' }}>Note:</strong> This semi-log plot shows
         how BER decreases exponentially with SNR. The "waterfall" shape is characteristic
         of digital modulation over AWGN channels. Higher-order modulation shifts the
         curve to the right (requires more SNR for same BER).

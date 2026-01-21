@@ -108,6 +108,24 @@ export const ConstellationDiagram: React.FC<ConstellationDiagramProps> = ({
   // Label visibility state - local to this component, default to hidden
   const [showLabels, setShowLabels] = useState(showLabelsProp);
 
+  // Theme state - track changes to trigger canvas redraw
+  const [theme, setTheme] = useState(() =>
+    document.documentElement.getAttribute('data-theme') || 'dark'
+  );
+
+  // Listen for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'data-theme') {
+          setTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
   // Reset zoom when scheme changes (and set appropriate default)
   useEffect(() => {
     setZoomIndex(scheme === '64-QAM' ? 2 : 0);
@@ -190,7 +208,7 @@ export const ConstellationDiagram: React.FC<ConstellationDiagramProps> = ({
     // Draw axis labels
     drawAxisLabels(ctx, margin, width, height, COLORS);
 
-  }, [constellation, receivedSymbols, width, height, axisRange, showLabels, showUnitCircle, showGrid, isPSK]);
+  }, [constellation, receivedSymbols, width, height, axisRange, showLabels, showUnitCircle, showGrid, isPSK, theme]);
 
   return (
     <div

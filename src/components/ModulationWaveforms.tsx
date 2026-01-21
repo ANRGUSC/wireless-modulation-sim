@@ -67,15 +67,21 @@ interface ModulationWaveformsProps {
 // CONSTANTS
 // =============================================================================
 
-const COLORS = {
-  background: '#1e293b',
-  grid: '#334155',
-  axis: '#64748b',
-  waveform: '#22d3ee',
-  envelope: '#f97316',
+// Helper to get CSS variable value
+const getCSSVar = (name: string): string => {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#1e293b';
+};
+
+// Get theme-aware colors
+const getColors = () => ({
+  background: getCSSVar('--canvas-bg'),
+  grid: getCSSVar('--color-grid'),
+  axis: getCSSVar('--color-axis'),
+  waveform: getCSSVar('--color-i-channel'),
+  envelope: getCSSVar('--color-q-channel'),
   spectrum: '#a855f7',
-  text: '#94a3b8',
-  symbolBoundary: '#475569',
+  text: getCSSVar('--text-muted'),
+  symbolBoundary: getCSSVar('--color-grid'),
   phaseColors: [
     '#22d3ee', // cyan
     '#3b82f6', // blue
@@ -86,7 +92,7 @@ const COLORS = {
     '#eab308', // yellow
     '#22c55e', // green
   ],
-};
+});
 
 // =============================================================================
 // COMPONENT
@@ -112,6 +118,24 @@ export const ModulationWaveforms: React.FC<ModulationWaveformsProps> = ({
   const timeScrollRef = useRef<HTMLDivElement>(null);
   const [useRaisedCosine, setUseRaisedCosine] = useState(initialUseRaisedCosine);
 
+  // Theme state - track changes to trigger canvas redraw
+  const [theme, setTheme] = useState(() =>
+    document.documentElement.getAttribute('data-theme') || 'dark'
+  );
+
+  // Listen for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'data-theme') {
+          setTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
   // Maximum symbols to show at once (for readable display)
   const maxVisibleSymbols = 16;
 
@@ -130,6 +154,9 @@ export const ModulationWaveforms: React.FC<ModulationWaveformsProps> = ({
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Get theme-aware colors
+    const COLORS = getColors();
 
     const numSymbols = constellation.length;
 
@@ -273,7 +300,7 @@ export const ModulationWaveforms: React.FC<ModulationWaveformsProps> = ({
     ctx.fillText('0', margin.left - 5, y0 + 3);
     ctx.fillText('-1', margin.left - 5, margin.top + plotHeight - 5);
 
-  }, [constellation, width, timeHeight, carrierCycles, useRaisedCosine]);
+  }, [constellation, width, timeHeight, carrierCycles, useRaisedCosine, theme]);
 
   /**
    * Draw frequency domain (magnitude spectrum)
@@ -292,6 +319,9 @@ export const ModulationWaveforms: React.FC<ModulationWaveformsProps> = ({
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Get theme-aware colors
+    const COLORS = getColors();
 
     // Handle high-DPI displays
     const dpr = window.devicePixelRatio || 1;
@@ -476,41 +506,49 @@ export const ModulationWaveforms: React.FC<ModulationWaveformsProps> = ({
     ctx.textAlign = 'right';
     ctx.fillText(`Bandwidth: ${bw}`, width - margin.right, 15);
 
-  }, [width, freqHeight, useRaisedCosine]);
+  }, [width, freqHeight, useRaisedCosine, theme]);
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 space-y-4">
+    <div
+      className="rounded-lg p-4 border space-y-4 transition-colors"
+      style={{
+        backgroundColor: 'var(--bg-secondary)',
+        borderColor: 'var(--bg-border)'
+      }}
+    >
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <div className="text-sm text-slate-400 font-medium">
+          <div className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
             MODULATION WAVEFORM REFERENCE
           </div>
-          <div className="text-xs text-slate-500">
+          <div className="text-xs" style={{ color: 'var(--text-muted)' }}>
             {scheme}: {constellation.length} symbols showing phase/amplitude encoding
           </div>
         </div>
 
         {/* Pulse shaping toggle */}
         <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400">Pulse Shaping:</span>
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Pulse Shaping:</span>
           <button
             onClick={() => setUseRaisedCosine(false)}
-            className={`px-3 py-1 text-xs rounded ${
+            className={`px-3 py-1 text-xs rounded transition-colors ${
               !useRaisedCosine
                 ? 'bg-cyan-600 text-white'
-                : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                : 'hover:opacity-80'
             }`}
+            style={useRaisedCosine ? { backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-muted)' } : {}}
           >
             Rectangular
           </button>
           <button
             onClick={() => setUseRaisedCosine(true)}
-            className={`px-3 py-1 text-xs rounded ${
+            className={`px-3 py-1 text-xs rounded transition-colors ${
               useRaisedCosine
                 ? 'bg-cyan-600 text-white'
-                : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                : 'hover:opacity-80'
             }`}
+            style={!useRaisedCosine ? { backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-muted)' } : {}}
           >
             Raised Cosine
           </button>
@@ -521,16 +559,16 @@ export const ModulationWaveforms: React.FC<ModulationWaveformsProps> = ({
       <div
         ref={timeScrollRef}
         className="rounded-lg overflow-x-auto"
-        style={{ background: COLORS.background, maxWidth: '100%' }}
+        style={{ background: 'var(--canvas-bg)', maxWidth: '100%' }}
       >
         <canvas
           ref={timeCanvasRef}
           className="rounded-lg"
-          style={{ background: COLORS.background, minWidth: width }}
+          style={{ background: 'var(--canvas-bg)', minWidth: width }}
         />
       </div>
       {constellation.length > maxVisibleSymbols && (
-        <div className="text-xs text-slate-500 text-center -mt-2">
+        <div className="text-xs text-center -mt-2" style={{ color: 'var(--text-muted)' }}>
           ← Scroll horizontally to see all {constellation.length} symbols →
         </div>
       )}
@@ -539,20 +577,20 @@ export const ModulationWaveforms: React.FC<ModulationWaveformsProps> = ({
       <canvas
         ref={freqCanvasRef}
         className="rounded-lg w-full"
-        style={{ background: COLORS.background }}
+        style={{ background: 'var(--canvas-bg)' }}
       />
 
       {/* Educational notes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-500">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs" style={{ color: 'var(--text-muted)' }}>
         <div>
-          <strong className="text-slate-400">Time Domain:</strong>
+          <strong style={{ color: 'var(--text-secondary)' }}>Time Domain:</strong>
           {' '}Each symbol is shown as s(t) = A·cos(2πfc·t + φ) where A is the
           amplitude and φ is the phase from the constellation point.
           {scheme.includes('PSK') && ' For PSK, all symbols have equal amplitude but different phases.'}
           {scheme.includes('QAM') && ' For QAM, symbols vary in both amplitude and phase.'}
         </div>
         <div>
-          <strong className="text-slate-400">Frequency Domain:</strong>
+          <strong style={{ color: 'var(--text-secondary)' }}>Frequency Domain:</strong>
           {' '}The spectrum shows energy centered at ±fc (carrier frequency).
           {' '}Rectangular pulses have infinite bandwidth (sinc spectrum).
           {' '}Raised cosine shaping concentrates energy, reducing interference.

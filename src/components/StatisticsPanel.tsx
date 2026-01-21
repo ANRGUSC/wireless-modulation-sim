@@ -172,10 +172,16 @@ export const StatisticsPanel: React.FC<StatisticsPanelProps> = ({
     : 'N/A';
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+    <div
+      className="rounded-lg p-4 border transition-colors"
+      style={{
+        backgroundColor: 'var(--bg-secondary)',
+        borderColor: 'var(--bg-border)'
+      }}
+    >
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <div className="text-sm text-slate-400 font-medium">
+        <div className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
           SIMULATION STATISTICS
         </div>
         {/* Running indicator */}
@@ -252,9 +258,9 @@ export const StatisticsPanel: React.FC<StatisticsPanelProps> = ({
         />
 
         {/* Convergence indicator - shows both sample size AND accuracy */}
-        <div className="bg-slate-700/50 rounded-lg p-3">
-          <div className="text-xs text-slate-400 mb-1">Convergence Status</div>
-          <div className="h-2 bg-slate-600 rounded-full overflow-hidden">
+        <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+          <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>Convergence Status</div>
+          <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--bg-border)' }}>
             <div
               className={`h-full transition-all duration-300 ${
                 accuracy.isGood && sampleQuality.percentage >= 60 ? 'bg-green-500' :
@@ -276,8 +282,8 @@ export const StatisticsPanel: React.FC<StatisticsPanelProps> = ({
       </div>
 
       {/* Educational note */}
-      <div className="mt-4 pt-3 border-t border-slate-700 text-xs text-slate-500">
-        <strong className="text-slate-400">Key metric:</strong> The BER Ratio (simulated/theoretical)
+      <div className="mt-4 pt-3 border-t text-xs" style={{ borderColor: 'var(--bg-border)', color: 'var(--text-muted)' }}>
+        <strong style={{ color: 'var(--text-secondary)' }}>Key metric:</strong> The BER Ratio (simulated/theoretical)
         should converge to ~1.0 with enough samples. With 100+ errors, expect ratio between 0.8-1.2.
         Ratios far from 1.0 may indicate insufficient samples or simulation issues.
       </div>
@@ -309,8 +315,8 @@ const StatBox: React.FC<StatBoxProps> = ({
   subtextClass = 'text-slate-500',
   large = false,
 }) => (
-  <div className="bg-slate-700/50 rounded-lg p-3">
-    <div className="text-xs text-slate-400 mb-1">{label}</div>
+  <div className="rounded-lg p-3" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+    <div className="text-xs mb-1" style={{ color: 'var(--text-muted)' }}>{label}</div>
     <div className={`font-mono font-bold ${large ? 'text-xl' : 'text-lg'} ${valueClass}`}>
       {value}
     </div>

@@ -58,18 +58,24 @@ interface WaveformDisplayProps {
 // CONSTANTS
 // =============================================================================
 
-const COLORS = {
-  background: '#1e293b',
-  grid: '#334155',
-  axis: '#64748b',
-  iChannel: '#22d3ee',      // Cyan for I
-  qChannel: '#f97316',      // Orange for Q
+// Helper to get CSS variable value
+const getCSSVar = (name: string): string => {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#1e293b';
+};
+
+// Get theme-aware colors
+const getColors = () => ({
+  background: getCSSVar('--canvas-bg'),
+  grid: getCSSVar('--color-grid'),
+  axis: getCSSVar('--color-axis'),
+  iChannel: getCSSVar('--color-i-channel'),
+  qChannel: getCSSVar('--color-q-channel'),
   iChannelFaded: 'rgba(34, 211, 238, 0.6)',
   qChannelFaded: 'rgba(249, 115, 22, 0.6)',
-  symbolBoundary: '#475569',
-  text: '#94a3b8',
-  bitLabel: '#e2e8f0',
-};
+  symbolBoundary: getCSSVar('--color-grid'),
+  text: getCSSVar('--text-muted'),
+  bitLabel: getCSSVar('--text-primary'),
+});
 
 // =============================================================================
 // COMPONENT
@@ -96,6 +102,24 @@ export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
   const txCanvasRef = useRef<HTMLCanvasElement>(null);
   const rxCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Theme state - track changes to trigger canvas redraw
+  const [theme, setTheme] = React.useState(() =>
+    document.documentElement.getAttribute('data-theme') || 'dark'
+  );
+
+  // Listen for theme changes
+  React.useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'data-theme') {
+          setTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
+
   /**
    * Draw a waveform on the given canvas.
    */
@@ -107,6 +131,9 @@ export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
   ) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Get theme-aware colors
+    const COLORS = getColors();
 
     // Handle high-DPI displays
     const dpr = window.devicePixelRatio || 1;
@@ -268,7 +295,7 @@ export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
         true
       );
     }
-  }, [transmittedWaveform, bits, bitsPerSymbol, width, height, numSymbols]);
+  }, [transmittedWaveform, bits, bitsPerSymbol, width, height, numSymbols, theme]);
 
   useEffect(() => {
     if (rxCanvasRef.current) {
@@ -279,16 +306,22 @@ export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
         false
       );
     }
-  }, [receivedWaveform, width, height, numSymbols]);
+  }, [receivedWaveform, width, height, numSymbols, theme]);
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 space-y-4">
+    <div
+      className="rounded-lg p-4 border space-y-4 transition-colors"
+      style={{
+        backgroundColor: 'var(--bg-secondary)',
+        borderColor: 'var(--bg-border)'
+      }}
+    >
       {/* Transmitted Waveform */}
       <div>
         <canvas
           ref={txCanvasRef}
           className="rounded-lg w-full"
-          style={{ background: COLORS.background }}
+          style={{ background: 'var(--canvas-bg)' }}
         />
       </div>
 
@@ -297,23 +330,23 @@ export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
         <canvas
           ref={rxCanvasRef}
           className="rounded-lg w-full"
-          style={{ background: COLORS.background }}
+          style={{ background: 'var(--canvas-bg)' }}
         />
       </div>
 
       {/* Legend */}
       <div className="flex justify-center gap-8 text-xs">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 bg-cyan-400 rounded" />
-          <span className="text-slate-400">I(t) - In-phase</span>
+          <div className="w-4 h-0.5 rounded" style={{ backgroundColor: 'var(--color-i-channel)' }} />
+          <span style={{ color: 'var(--text-muted)' }}>I(t) - In-phase</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 bg-orange-500 rounded" />
-          <span className="text-slate-400">Q(t) - Quadrature</span>
+          <div className="w-4 h-0.5 rounded" style={{ backgroundColor: 'var(--color-q-channel)' }} />
+          <span style={{ color: 'var(--text-muted)' }}>Q(t) - Quadrature</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-0.5 border-t border-dashed border-slate-500" />
-          <span className="text-slate-400">Symbol boundaries</span>
+          <div className="w-4 h-0.5 border-t border-dashed" style={{ borderColor: 'var(--color-grid)' }} />
+          <span style={{ color: 'var(--text-muted)' }}>Symbol boundaries</span>
         </div>
       </div>
     </div>
