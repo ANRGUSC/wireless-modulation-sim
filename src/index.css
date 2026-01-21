@@ -8,14 +8,19 @@
 @import "tailwindcss";
 
 /**
- * Custom CSS Variables for the dark theme
- * These colors are chosen for readability in lab/classroom environments
+ * Custom CSS Variables for themes
+ * Dark theme (default) is chosen for readability in lab/classroom environments
+ * Light theme is provided for users with vision sensitivities
  */
-:root {
+
+/* Dark theme (default) */
+:root,
+[data-theme="dark"] {
   /* Dark background colors */
   --bg-primary: #0f172a;      /* Main background - slate-900 */
   --bg-secondary: #1e293b;    /* Card backgrounds - slate-800 */
   --bg-tertiary: #334155;     /* Elevated elements - slate-700 */
+  --bg-border: #475569;       /* Border color - slate-600 */
 
   /* Signal visualization colors */
   --color-i-channel: #22d3ee;  /* Cyan for In-phase component */
@@ -33,6 +38,38 @@
   --text-primary: #f8fafc;     /* Primary text - slate-50 */
   --text-secondary: #cbd5e1;   /* Secondary text - slate-300 */
   --text-muted: #64748b;       /* Muted text - slate-500 */
+
+  /* Canvas background */
+  --canvas-bg: #1e293b;        /* Canvas background - slate-800 */
+}
+
+/* Light theme */
+[data-theme="light"] {
+  /* Light background colors */
+  --bg-primary: #f8fafc;       /* Main background - slate-50 */
+  --bg-secondary: #ffffff;     /* Card backgrounds - white */
+  --bg-tertiary: #f1f5f9;      /* Elevated elements - slate-100 */
+  --bg-border: #cbd5e1;        /* Border color - slate-300 */
+
+  /* Signal visualization colors (adjusted for light bg) */
+  --color-i-channel: #0891b2;  /* Darker cyan for In-phase */
+  --color-q-channel: #ea580c;  /* Darker orange for Quadrature */
+  --color-ideal-point: #2563eb; /* Darker blue for ideal points */
+  --color-received: #dc2626;    /* Darker red for received symbols */
+  --color-theoretical: #16a34a; /* Darker green for theoretical BER */
+  --color-simulated: #ca8a04;   /* Darker yellow for simulated BER */
+
+  /* Grid and axis colors */
+  --color-grid: #cbd5e1;       /* Light grid lines - slate-300 */
+  --color-axis: #475569;       /* Darker axis labels - slate-600 */
+
+  /* Text colors */
+  --text-primary: #0f172a;     /* Primary text - slate-900 */
+  --text-secondary: #334155;   /* Secondary text - slate-700 */
+  --text-muted: #64748b;       /* Muted text - slate-500 */
+
+  /* Canvas background */
+  --canvas-bg: #f9fafb;        /* Canvas background - gray-50 */
 }
 
 /**
@@ -96,4 +133,39 @@ body {
 
 .animate-pulse-subtle {
   animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/**
+ * Enhanced focus visibility for keyboard navigation (Accessibility)
+ */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 3px solid #22d3ee;
+  outline-offset: 2px;
+}
+
+/* Ensure disabled elements don't show focus */
+button:disabled:focus-visible,
+input:disabled:focus-visible {
+  outline: none;
+}
+
+/**
+ * Skip to main content link for screen readers (Accessibility)
+ */
+.skip-to-main {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #22d3ee;
+  color: #0f172a;
+  padding: 8px 16px;
+  text-decoration: none;
+  font-weight: bold;
+  z-index: 100;
+}
+
+.skip-to-main:focus {
+  top: 0;
 }

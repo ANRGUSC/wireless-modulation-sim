@@ -66,14 +66,20 @@ export const ModulationSelector: React.FC<ModulationSelectorProps> = ({
   disabled = false,
 }) => {
   return (
-    <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+    <div
+      className="rounded-lg p-4 border transition-colors"
+      style={{
+        backgroundColor: 'var(--bg-secondary)',
+        borderColor: 'var(--bg-border)'
+      }}
+    >
       {/* Section Header */}
-      <div className="text-sm text-slate-400 mb-3 font-medium">
+      <div className="text-sm mb-3 font-medium" style={{ color: 'var(--text-muted)' }} id="modulation-label">
         MODULATION SCHEME
       </div>
 
       {/* Button Group */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2" role="group" aria-labelledby="modulation-label">
         {MODULATION_OPTIONS.map(({ scheme, label }) => {
           const isSelected = selected === scheme;
           const bitsPerSym = BITS_PER_SYMBOL[scheme];
@@ -93,7 +99,9 @@ export const ModulationSelector: React.FC<ModulationSelectorProps> = ({
                 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-slate-800
               `}
-              title={`${label} - ${bitsPerSym} bit${bitsPerSym > 1 ? 's' : ''} per symbol`}
+              title={`${label} - Transmits ${bitsPerSym} bit${bitsPerSym > 1 ? 's' : ''} per symbol (${Math.pow(2, bitsPerSym)} constellation points). Higher-order modulation = higher data rate but more sensitive to noise.`}
+              aria-label={`${label} - ${bitsPerSym} bit${bitsPerSym > 1 ? 's' : ''} per symbol`}
+              aria-pressed={isSelected}
             >
               {label}
             </button>
@@ -102,8 +110,8 @@ export const ModulationSelector: React.FC<ModulationSelectorProps> = ({
       </div>
 
       {/* Current Selection Info */}
-      <div className="mt-3 text-xs text-slate-500">
-        <span className="text-slate-400">{selected}</span>
+      <div className="mt-3 text-xs" style={{ color: 'var(--text-muted)' }} aria-live="polite">
+        <span style={{ color: 'var(--text-secondary)' }}>{selected}</span>
         {' = '}
         <span className="text-cyan-400 font-mono">{BITS_PER_SYMBOL[selected]}</span>
         {' bit'}{BITS_PER_SYMBOL[selected] > 1 ? 's' : ''} per symbol

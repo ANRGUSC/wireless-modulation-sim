@@ -19,7 +19,7 @@
  */
 
 import './index.css';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 // Import custom hooks
@@ -34,6 +34,7 @@ import ConstellationDiagram from './components/ConstellationDiagram';
 import WaveformDisplay from './components/WaveformDisplay';
 import BERPlot from './components/BERPlot';
 import ModulationWaveforms from './components/ModulationWaveforms';
+import ThemeToggle from './components/ThemeToggle';
 
 // Import types and utilities
 import { BITS_PER_SYMBOL } from './types';
@@ -65,6 +66,23 @@ import { getMaxUsefulSnr } from './utils/theory';
  * └─────────────────────────────────────────────────────────────────────┘
  */
 function App() {
+  // Theme state - load from localStorage or default to dark
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('theme');
+    return (saved === 'light' || saved === 'dark') ? saved : 'dark';
+  });
+
+  // Apply theme to document root and save to localStorage
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  // Toggle theme function
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
   // Initialize the simulation hook with default settings
   const {
     state,
@@ -92,37 +110,55 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 p-4 md:p-6">
+    <div
+      className="min-h-screen p-4 md:p-6 transition-colors duration-200"
+      style={{
+        backgroundColor: 'var(--bg-primary)',
+        color: 'var(--text-primary)'
+      }}
+    >
+      {/* Skip to main content link for screen readers */}
+      <a href="#main-content" className="skip-to-main">
+        Skip to main content
+      </a>
+
       {/* Main container with max width for large screens */}
       <div className="max-w-7xl mx-auto space-y-4">
 
         {/* ============================================================= */}
         {/* HEADER SECTION */}
         {/* ============================================================= */}
-        <header className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+        <header
+          className="rounded-lg p-4 border transition-colors"
+          style={{
+            backgroundColor: 'var(--bg-secondary)',
+            borderColor: 'var(--bg-border)'
+          }}
+        >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
             <div>
               <h1 className="text-2xl font-bold text-cyan-400">
                 Digital Modulation Simulator
               </h1>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
                 This simulator allows you to explore the bit error rate performance of major digital modulation schemes under additive white Gaussian noise (AWGN).
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <ThemeToggle theme={theme} onToggle={toggleTheme} />
               <Link
                 to="/dig-deeper"
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-medium transition-colors text-white"
               >
                 Dig Deeper
               </Link>
               <Link
                 to="/quiz"
-                className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-medium transition-colors text-white"
               >
                 Take Quiz
               </Link>
-              <div className="text-right text-xs text-slate-500">
+              <div className="text-right text-xs" style={{ color: 'var(--text-muted)' }}>
                 <div>EE597 - Wireless Networks</div>
                 <div>University of Southern California</div>
               </div>
@@ -131,8 +167,29 @@ function App() {
         </header>
 
         {/* ============================================================= */}
+        {/* START HERE SECTION */}
+        {/* ============================================================= */}
+        <section
+          className="rounded-lg p-4 border border-cyan-700/50"
+          style={{
+            backgroundColor: theme === 'dark' ? 'rgba(6, 78, 59, 0.3)' : 'rgba(103, 232, 249, 0.1)',
+          }}
+          aria-labelledby="start-here-heading"
+        >
+          <h2 id="start-here-heading" className="text-lg font-bold text-cyan-400 mb-2">▶ Start Here</h2>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Choose a <strong className="text-cyan-400">modulation scheme</strong> (BPSK, QPSK, 8-PSK, 16-QAM, or 64-QAM) and adjust the <strong className="text-cyan-400">SNR (Eb/N0)</strong> to see how noise affects performance.
+            Press <strong className="text-green-400">Play</strong> to start transmitting symbols and watch the <strong>constellation diagram</strong> scatter due to noise.
+            Observe how the <strong>simulated BER</strong> (red dots) converges to the <strong>theoretical curve</strong> (colored lines) as more bits are transmitted.
+            Toggle <strong>bit labels</strong> to see Gray coding, and use <strong>zoom controls</strong> to examine constellation points in detail.
+            Try comparing different modulation schemes at the same SNR to understand the trade-off between data rate and error performance.
+          </p>
+        </section>
+
+        {/* ============================================================= */}
         {/* CONTROL PANEL */}
         {/* ============================================================= */}
+        <main id="main-content" role="main">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Modulation Scheme Selector */}
           <ModulationSelector
@@ -150,8 +207,14 @@ function App() {
           />
 
           {/* Playback Controls */}
-          <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
-            <div className="text-sm text-slate-400 mb-3 font-medium">
+          <div
+            className="rounded-lg p-4 border transition-colors"
+            style={{
+              backgroundColor: 'var(--bg-secondary)',
+              borderColor: 'var(--bg-border)'
+            }}
+          >
+            <div className="text-sm mb-3 font-medium" style={{ color: 'var(--text-muted)' }}>
               SIMULATION CONTROLS
             </div>
             <PlaybackControls
@@ -177,7 +240,7 @@ function App() {
             scheme={state.scheme}
             width={400}
             height={400}
-            showLabels={true}
+            showLabels={false}
             showUnitCircle={true}
             showGrid={true}
           />
@@ -222,15 +285,23 @@ function App() {
           scheme={state.scheme}
           carrierCycles={4}
         />
+        </main>
 
         {/* ============================================================= */}
         {/* FOOTER - Educational Information */}
         {/* ============================================================= */}
-        <footer className="bg-slate-800 rounded-lg p-4 border border-slate-700 text-xs text-slate-500">
+        <footer
+          className="rounded-lg p-4 border text-xs transition-colors"
+          style={{
+            backgroundColor: 'var(--bg-secondary)',
+            borderColor: 'var(--bg-border)',
+            color: 'var(--text-muted)'
+          }}
+        >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Quick Reference */}
             <div>
-              <h3 className="text-slate-400 font-medium mb-2">Quick Reference</h3>
+              <h3 className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Quick Reference</h3>
               <ul className="space-y-1">
                 <li><strong className="text-cyan-400">I(t)</strong> = In-phase (cosine carrier)</li>
                 <li><strong className="text-orange-400">Q(t)</strong> = Quadrature (sine carrier)</li>
@@ -241,7 +312,7 @@ function App() {
 
             {/* Key Concepts */}
             <div>
-              <h3 className="text-slate-400 font-medium mb-2">Key Concepts</h3>
+              <h3 className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Key Concepts</h3>
               <ul className="space-y-1">
                 <li>Higher order modulation = more bits/symbol</li>
                 <li>But also = closer points = more errors</li>
@@ -252,13 +323,13 @@ function App() {
 
             {/* About */}
             <div>
-              <h3 className="text-slate-400 font-medium mb-2">About</h3>
+              <h3 className="font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>About</h3>
               <p>
                 This simulator demonstrates digital modulation over AWGN channels.
                 Observe how noise affects the received constellation and how
                 simulated BER converges to theoretical values.
               </p>
-              <p className="mt-2 text-slate-600">
+              <p className="mt-2">
                 Developed by Bhaskar Krishnamachari with Claude Code, January 2026
               </p>
             </div>

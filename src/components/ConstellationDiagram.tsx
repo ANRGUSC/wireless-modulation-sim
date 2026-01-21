@@ -56,20 +56,25 @@ interface ConstellationDiagramProps {
 // CONSTANTS
 // =============================================================================
 
-// Colors for visualization (matching CSS variables)
-const COLORS = {
-  background: '#1e293b',
-  grid: '#334155',
-  axis: '#64748b',
+// Helper to get CSS variable value
+const getCSSVar = (name: string): string => {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || '#1e293b';
+};
+
+// Colors for visualization (using CSS variables for theme support)
+const getColors = () => ({
+  background: getCSSVar('--canvas-bg'),
+  grid: getCSSVar('--color-grid'),
+  axis: getCSSVar('--color-axis'),
   idealPoint: '#3b82f6',      // Blue
   idealPointFill: '#60a5fa',  // Lighter blue
   receivedOK: '#22c55e',      // Green for correct
   receivedError: '#ef4444',   // Red for errors
   receivedNormal: '#f97316',  // Orange for normal received
-  unitCircle: '#475569',
-  text: '#94a3b8',
-  bitLabel: '#e2e8f0',
-};
+  unitCircle: getCSSVar('--color-grid'),
+  text: getCSSVar('--text-muted'),
+  bitLabel: getCSSVar('--text-primary'),
+});
 
 // =============================================================================
 // COMPONENT
@@ -91,7 +96,7 @@ export const ConstellationDiagram: React.FC<ConstellationDiagramProps> = ({
   width = 400,
   height = 400,
   axisRange: baseAxisRange = 2,
-  showLabels = true,
+  showLabels: showLabelsProp = false,
   showUnitCircle = true,
   showGrid = true,
 }) => {
@@ -99,6 +104,9 @@ export const ConstellationDiagram: React.FC<ConstellationDiagramProps> = ({
 
   // Zoom state - default to 2x for 64-QAM, 1x for others
   const [zoomIndex, setZoomIndex] = useState(() => scheme === '64-QAM' ? 2 : 0);
+
+  // Label visibility state - local to this component, default to hidden
+  const [showLabels, setShowLabels] = useState(showLabelsProp);
 
   // Reset zoom when scheme changes (and set appropriate default)
   useEffect(() => {
@@ -135,6 +143,9 @@ export const ConstellationDiagram: React.FC<ConstellationDiagramProps> = ({
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+
+    // Get theme-aware colors
+    const COLORS = getColors();
 
     // Handle high-DPI displays
     const dpr = window.devicePixelRatio || 1;
@@ -182,13 +193,36 @@ export const ConstellationDiagram: React.FC<ConstellationDiagramProps> = ({
   }, [constellation, receivedSymbols, width, height, axisRange, showLabels, showUnitCircle, showGrid, isPSK]);
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+    <div
+      className="rounded-lg p-4 border transition-colors"
+      style={{
+        backgroundColor: 'var(--bg-secondary)',
+        borderColor: 'var(--bg-border)'
+      }}
+      role="region"
+      aria-labelledby="constellation-heading"
+    >
       {/* Header */}
       <div className="flex justify-between items-center mb-3">
-        <div className="text-sm text-slate-400 font-medium">
+        <div className="text-sm font-medium" style={{ color: 'var(--text-muted)' }} id="constellation-heading">
           CONSTELLATION DIAGRAM
         </div>
         <div className="flex items-center gap-3">
+          {/* Bit labels toggle */}
+          <button
+            onClick={() => setShowLabels(!showLabels)}
+            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+              showLabels
+                ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
+                : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+            }`}
+            title="Toggle Gray-coded bit labels on constellation points. Shows how bits map to I/Q coordinates."
+            aria-label={`${showLabels ? 'Hide' : 'Show'} bit labels on constellation points`}
+            aria-pressed={showLabels}
+          >
+            {showLabels ? '📍 Labels On' : '📍 Labels Off'}
+          </button>
+
           {/* Zoom controls */}
           <div className="flex items-center gap-1">
             <button
@@ -199,11 +233,12 @@ export const ConstellationDiagram: React.FC<ConstellationDiagramProps> = ({
                   ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
                   : 'bg-slate-800 text-slate-600 cursor-not-allowed'
               }`}
-              title="Zoom out"
+              title="Zoom out the constellation diagram to see a wider I/Q range"
+              aria-label="Zoom out constellation diagram"
             >
               −
             </button>
-            <span className="text-xs text-slate-400 w-10 text-center">
+            <span className="text-xs w-10 text-center" style={{ color: 'var(--text-muted)' }} aria-live="polite" aria-atomic="true">
               {zoomLevel}×
             </span>
             <button
@@ -214,12 +249,13 @@ export const ConstellationDiagram: React.FC<ConstellationDiagramProps> = ({
                   ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
                   : 'bg-slate-800 text-slate-600 cursor-not-allowed'
               }`}
-              title="Zoom in"
+              title="Zoom in the constellation diagram to see constellation points and noise scatter in more detail"
+              aria-label="Zoom in constellation diagram"
             >
               +
             </button>
           </div>
-          <div className="text-xs text-slate-500">
+          <div className="text-xs" style={{ color: 'var(--text-muted)' }} aria-live="polite">
             {receivedSymbols.length} symbols
           </div>
         </div>
@@ -230,23 +266,25 @@ export const ConstellationDiagram: React.FC<ConstellationDiagramProps> = ({
         <canvas
           ref={canvasRef}
           className="rounded-lg"
-          style={{ background: COLORS.background }}
+          style={{ background: 'var(--canvas-bg)' }}
+          role="img"
+          aria-label={`Constellation diagram for ${scheme} showing ${constellation.length} ideal points and ${receivedSymbols.length} received symbols`}
         />
       </div>
 
       {/* Legend */}
-      <div className="flex justify-center gap-6 mt-3 text-xs">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-blue-500" />
-          <span className="text-slate-400">Ideal points</span>
+      <div className="flex justify-center gap-6 mt-3 text-xs" role="list" aria-label="Constellation diagram legend">
+        <div className="flex items-center gap-2" role="listitem">
+          <div className="w-3 h-3 rounded-full bg-blue-500" aria-hidden="true" />
+          <span style={{ color: 'var(--text-muted)' }}>Ideal points</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-orange-500 font-bold">×</span>
-          <span className="text-slate-400">Received</span>
+        <div className="flex items-center gap-2" role="listitem">
+          <span className="text-orange-500 font-bold" aria-hidden="true">×</span>
+          <span style={{ color: 'var(--text-muted)' }}>Received</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-red-500 font-bold">×</span>
-          <span className="text-slate-400">Error</span>
+        <div className="flex items-center gap-2" role="listitem">
+          <span className="text-red-500 font-bold" aria-hidden="true">×</span>
+          <span style={{ color: 'var(--text-muted)' }}>Error</span>
         </div>
       </div>
     </div>

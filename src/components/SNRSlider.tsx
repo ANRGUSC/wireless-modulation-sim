@@ -84,10 +84,16 @@ export const SNRSlider: React.FC<SNRSliderProps> = ({
   const quality = getQualityIndicator(value);
 
   return (
-    <div className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+    <div
+      className="rounded-lg p-4 border transition-colors"
+      style={{
+        backgroundColor: 'var(--bg-secondary)',
+        borderColor: 'var(--bg-border)'
+      }}
+    >
       {/* Header with current value */}
       <div className="flex justify-between items-center mb-3">
-        <div className="text-sm text-slate-400 font-medium">
+        <div className="text-sm font-medium" style={{ color: 'var(--text-muted)' }} id="snr-label">
           SNR (Eb/N0)
         </div>
         <div className="flex items-center gap-2">
@@ -122,8 +128,14 @@ export const SNRSlider: React.FC<SNRSliderProps> = ({
           value={value}
           onChange={(e) => onChange(parseFloat(e.target.value))}
           disabled={disabled}
-          className="absolute top-0 w-full h-2 opacity-0 cursor-pointer"
+          className="absolute top-0 w-full h-2 opacity-0 cursor-pointer disabled:cursor-not-allowed"
           aria-label="SNR Eb/N0 in dB"
+          aria-labelledby="snr-label"
+          aria-valuemin={min}
+          aria-valuemax={max}
+          aria-valuenow={value}
+          aria-valuetext={`${value.toFixed(1)} decibels`}
+          title="Adjust the Signal-to-Noise Ratio (Eb/N0). Higher values = cleaner signal with fewer errors. Lower values = more noise and bit errors."
         />
 
         {/* Custom thumb indicator */}
@@ -143,8 +155,8 @@ export const SNRSlider: React.FC<SNRSliderProps> = ({
       </div>
 
       {/* Educational note */}
-      <div className="mt-3 text-xs text-slate-500">
-        <span className="text-slate-400">Eb/N0</span> = Energy per bit / Noise spectral density.
+      <div className="mt-3 text-xs" style={{ color: 'var(--text-muted)' }}>
+        <span style={{ color: 'var(--text-secondary)' }}>Eb/N0</span> = Energy per bit / Noise spectral density.
         {' '}Higher values = less noise = fewer errors.
       </div>
     </div>

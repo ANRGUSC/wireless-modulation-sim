@@ -93,7 +93,7 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
+    <div className="flex flex-wrap items-center gap-4" role="group" aria-label="Simulation playback controls">
       {/* Main control buttons */}
       <div className="flex gap-2">
         {/* Play/Pause toggle button */}
@@ -107,10 +107,12 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
               ? 'bg-orange-600 hover:bg-orange-500 text-white'
               : 'bg-green-600 hover:bg-green-500 text-white'
             }
-            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-800
+            focus:outline-none focus:ring-2 focus:ring-offset-2
             ${isPlaying ? 'focus:ring-orange-500' : 'focus:ring-green-500'}
           `}
-          title={isPlaying ? 'Pause simulation' : 'Start simulation'}
+          title={isPlaying ? 'Pause the symbol generation and transmission' : 'Start generating and transmitting symbols continuously'}
+          aria-label={isPlaying ? 'Pause simulation' : 'Play simulation'}
+          aria-pressed={isPlaying}
         >
           {isPlaying ? <PauseIcon /> : <PlayIcon />}
           <span>{isPlaying ? 'Pause' : 'Play'}</span>
@@ -129,9 +131,10 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
               ? 'opacity-50 cursor-not-allowed'
               : 'hover:bg-slate-600 hover:text-white'
             }
-            focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-slate-800
+            focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2
           `}
-          title="Generate one batch of symbols"
+          title="Generate and transmit a single batch of symbols (useful for observing individual symbol behavior)"
+          aria-label="Step one batch of symbols"
         >
           <StepIcon />
           <span>Step</span>
@@ -146,9 +149,10 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
             bg-slate-700 text-slate-300
             hover:bg-red-600 hover:text-white
             transition-all duration-150
-            focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-slate-800
+            focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2
           `}
-          title="Reset simulation and clear statistics"
+          title="Reset the simulation, clearing all accumulated statistics and symbol history"
+          aria-label="Reset simulation"
         >
           <ResetIcon />
           <span>Reset</span>
@@ -156,8 +160,8 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
       </div>
 
       {/* Speed control */}
-      <div className="flex items-center gap-3 bg-slate-700/50 rounded-lg px-4 py-2">
-        <span className="text-sm text-slate-400 whitespace-nowrap">Speed:</span>
+      <div className="flex items-center gap-3 rounded-lg px-4 py-2" style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+        <span className="text-sm whitespace-nowrap" style={{ color: 'var(--text-muted)' }} id="speed-label">Speed:</span>
 
         {/* Speed slider */}
         <div className="relative w-32">
@@ -175,6 +179,12 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
             onChange={handleSpeedChange}
             className="absolute top-0 w-full h-1 opacity-0 cursor-pointer"
             aria-label="Playback speed"
+            aria-labelledby="speed-label"
+            aria-valuemin={minSpeed}
+            aria-valuemax={maxSpeed}
+            aria-valuenow={speed}
+            aria-valuetext={`${speed} symbols per second`}
+            title="Control how fast symbols are generated (symbols per second). Slower = observe individual symbols; Faster = accumulate BER statistics quickly."
           />
         </div>
 
